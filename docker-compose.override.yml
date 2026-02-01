@@ -1,10 +1,7 @@
 services:
   api:
-    build:
-      target: builder
     volumes:
       - .:/app
-      - /app/.venv
     environment:
       - DEBUG=true
       - LOG_LEVEL=DEBUG
