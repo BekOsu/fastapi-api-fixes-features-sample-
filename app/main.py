@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.api.routes import auth
 from app.core.config import settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.logging import setup_logging
@@ -22,6 +23,9 @@ app.add_middleware(RequestIDMiddleware)
 
 # Register exception handlers
 register_exception_handlers(app)
+
+# Register routers
+app.include_router(auth.router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health", tags=["ops"])
