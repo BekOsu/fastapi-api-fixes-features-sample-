@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.routes import auth
+from app.api.routes import auth, ops, tasks
 from app.core.config import settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.logging import setup_logging
@@ -26,8 +26,5 @@ register_exception_handlers(app)
 
 # Register routers
 app.include_router(auth.router, prefix=settings.api_v1_prefix)
-
-
-@app.get("/health", tags=["ops"])
-def health_check():
-    return {"status": "healthy"}
+app.include_router(tasks.router, prefix=settings.api_v1_prefix)
+app.include_router(ops.router)
