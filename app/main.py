@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 
 from app.core.config import settings
+from app.core.error_handlers import register_exception_handlers
+from app.core.logging import setup_logging
+from app.core.middleware import LoggingMiddleware, RequestIDMiddleware
+
+# Configure logging
+setup_logging()
 
 app = FastAPI(
     title=settings.app_name,
@@ -9,6 +15,13 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Register middleware (order matters - first added is outermost)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(RequestIDMiddleware)
+
+# Register exception handlers
+register_exception_handlers(app)
 
 
 @app.get("/health", tags=["ops"])
