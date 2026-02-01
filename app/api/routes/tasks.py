@@ -7,6 +7,8 @@ from app.db.models.task import TaskPriority, TaskStatus
 from app.schemas.common import PaginatedResponse, PaginationParams
 from app.schemas.task import (
     TaskAssign,
+    TaskBulkStatusUpdate,
+    TaskBulkStatusUpdateResponse,
     TaskCreate,
     TaskFilter,
     TaskResponse,
@@ -177,6 +179,28 @@ def transition_task(
     return TaskResponse.model_validate(updated_task)
 
 
+@router.post(
+    "/bulk-status",
+    response_model=TaskBulkStatusUpdateResponse,
+    summary="Bulk update task statuses",
+)
+def bulk_update_status(
+    request: TaskBulkStatusUpdate,
+    db: DBSession,
+    current_user: CurrentUser,
+) -> TaskBulkStatusUpdateResponse:
+    """Update status of multiple tasks at once.
+
+    Validates:
+    - All task IDs exist
+    - User has permission for each task
+    - All transitions are valid
+
+    Returns detailed results for each task.
+    """
+    return task_service.bulk_update_status(db, request, current_user)
+
+
 @router.delete(
     "/{task_id}/force",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -187,11 +211,11 @@ def force_delete_task(
     db: DBSession,
     current_user: CurrentUser,
 ) -> None:
-    """Force delete a task without ownership verification.
+    """Force delete a task.
 
-    This endpoint bypasses the normal authorization checks.
+    Only the owner or assignee can delete the task.
     """
-    # BUG: Missing authorization check - any authenticated user can delete any task
     task = task_service.get_task_by_id(db, task_id)
+    task_service._check_task_permission(task, current_user)
     db.delete(task)
     db.commit()

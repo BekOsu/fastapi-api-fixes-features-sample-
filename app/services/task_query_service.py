@@ -1,11 +1,7 @@
-"""Task query service for listing and filtering tasks.
-
-NOTE: This service intentionally has an N+1 query problem for demonstration.
-The fix will be applied in Phase 11 to showcase performance optimization.
-"""
+"""Task query service for listing and filtering tasks."""
 
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.task import Task
 from app.schemas.common import PaginatedResponse, PaginationParams
@@ -19,9 +15,8 @@ def list_tasks(
 ) -> PaginatedResponse[TaskResponse]:
     """List tasks with filtering, search, and pagination.
 
-    INTENTIONAL N+1 QUERY: This implementation fetches tasks first,
-    then accesses owner and assignee relationships lazily, causing
-    additional queries for each task. This will be fixed in Phase 11.
+    Uses joinedload to eagerly load owner and assignee relationships,
+    avoiding N+1 query problems.
 
     Args:
         db: Database session.
@@ -58,19 +53,20 @@ def list_tasks(
     # Get total count
     total_items = query.count()
 
-    # Apply pagination and ordering
+    # Apply pagination and ordering with eager loading to avoid N+1
     tasks = (
-        query.order_by(Task.created_at.desc())
+        query.options(
+            joinedload(Task.owner),
+            joinedload(Task.assignee),
+        )
+        .order_by(Task.created_at.desc())
         .offset(pagination.offset)
         .limit(pagination.per_page)
         .all()
     )
 
-    # INTENTIONAL N+1: Converting to response triggers lazy loading
-    # of owner and assignee for each task, causing N additional queries
     task_responses = []
     for task in tasks:
-        # Accessing task.owner and task.assignee causes lazy loading
         task_response = TaskResponse(
             id=task.id,
             title=task.title,
@@ -112,11 +108,12 @@ def get_task_with_relations(db: Session, task_id: int) -> Task | None:
     Returns:
         The Task object with owner and assignee loaded, or None.
     """
-    # For single task, N+1 isn't a problem, but we still load eagerly
-    # for consistency with the fixed version we'll implement later
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if task:
-        # Trigger lazy loading (will be 2 extra queries)
-        _ = task.owner
-        _ = task.assignee
-    return task
+    return (
+        db.query(Task)
+        .options(
+            joinedload(Task.owner),
+            joinedload(Task.assignee),
+        )
+        .filter(Task.id == task_id)
+        .first()
+    )
