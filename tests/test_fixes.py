@@ -1,9 +1,8 @@
 """Tests for bug fixes and performance improvements."""
 
-import pytest
 from app.core.security import hash_password
+from app.db.models.task import Task, TaskPriority, TaskStatus
 from app.db.models.user import User
-from app.db.models.task import Task, TaskStatus, TaskPriority
 
 
 class TestForceDeleteAuthorization:
@@ -163,7 +162,9 @@ class TestListTasksPerformance:
 
         # Find our task
         tasks = data["items"]
-        our_task = next((t for t in tasks if t["title"] == "Task with both owner and assignee"), None)
+        our_task = next(
+            (t for t in tasks if t["title"] == "Task with both owner and assignee"), None
+        )
         assert our_task is not None
 
         # Verify owner data is included

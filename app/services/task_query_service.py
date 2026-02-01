@@ -77,16 +77,24 @@ def list_tasks(
             assignee_id=task.assignee_id,
             created_at=task.created_at,
             updated_at=task.updated_at,
-            owner={
-                "id": task.owner.id,
-                "email": task.owner.email,
-                "full_name": task.owner.full_name,
-            } if task.owner else None,
-            assignee={
-                "id": task.assignee.id,
-                "email": task.assignee.email,
-                "full_name": task.assignee.full_name,
-            } if task.assignee else None,
+            owner=(
+                {
+                    "id": task.owner.id,
+                    "email": task.owner.email,
+                    "full_name": task.owner.full_name,
+                }
+                if task.owner
+                else None
+            ),
+            assignee=(
+                {
+                    "id": task.assignee.id,
+                    "email": task.assignee.email,
+                    "full_name": task.assignee.full_name,
+                }
+                if task.assignee
+                else None
+            ),
         )
         task_responses.append(task_response)
 

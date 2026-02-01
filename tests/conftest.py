@@ -4,12 +4,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.base import Base
 from app.api.deps import get_db
-from app.main import app
 from app.core.security import hash_password
+from app.db.base import Base
 from app.db.models.user import User
-from app.db.models.task import Task, TaskStatus, TaskPriority
+from app.main import app
 
 # Test database
 SQLALCHEMY_DATABASE_URL = "sqlite://"
@@ -19,6 +18,7 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 @pytest.fixture(scope="function")
 def db():
@@ -30,6 +30,7 @@ def db():
         db.close()
         Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture(scope="function")
 def client(db):
     def override_get_db():
@@ -37,10 +38,12 @@ def client(db):
             yield db
         finally:
             pass
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
 
 @pytest.fixture
 def test_user(db):
@@ -55,11 +58,11 @@ def test_user(db):
     db.refresh(user)
     return user
 
+
 @pytest.fixture
 def auth_headers(client, test_user):
-    response = client.post("/api/v1/auth/login", json={
-        "email": "test@example.com",
-        "password": "testpass123"
-    })
+    response = client.post(
+        "/api/v1/auth/login", json={"email": "test@example.com", "password": "testpass123"}
+    )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

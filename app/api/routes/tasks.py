@@ -32,7 +32,9 @@ def list_tasks(
     priority: TaskPriority | None = Query(default=None, description="Filter by priority"),
     assignee_id: int | None = Query(default=None, description="Filter by assignee ID"),
     owner_id: int | None = Query(default=None, description="Filter by owner ID"),
-    search: str | None = Query(default=None, max_length=100, description="Search in title and description"),
+    search: str | None = Query(
+        default=None, max_length=100, description="Search in title and description"
+    ),
     page: int = Query(default=1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(default=20, ge=1, le=100, description="Items per page"),
 ) -> PaginatedResponse[TaskResponse]:
@@ -145,9 +147,7 @@ def assign_task(
     Only the owner or current assignee can change the assignment.
     """
     task = task_service.get_task_by_id(db, task_id)
-    updated_task = task_service.assign_task(
-        db, task, assign_data.assignee_id, current_user
-    )
+    updated_task = task_service.assign_task(db, task, assign_data.assignee_id, current_user)
     return TaskResponse.model_validate(updated_task)
 
 

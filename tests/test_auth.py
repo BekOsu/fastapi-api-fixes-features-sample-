@@ -1,6 +1,5 @@
 """Tests for authentication endpoints."""
 
-import pytest
 from fastapi import status
 
 
@@ -9,11 +8,14 @@ class TestRegister:
 
     def test_register_success(self, client):
         """Test successful user registration."""
-        response = client.post("/api/v1/auth/register", json={
-            "email": "newuser@example.com",
-            "password": "securepass123",
-            "full_name": "New User"
-        })
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "newuser@example.com",
+                "password": "securepass123",
+                "full_name": "New User",
+            },
+        )
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert "access_token" in data
@@ -22,11 +24,14 @@ class TestRegister:
 
     def test_register_duplicate_email(self, client, test_user):
         """Test registration with an existing email fails."""
-        response = client.post("/api/v1/auth/register", json={
-            "email": "test@example.com",
-            "password": "anotherpass123",
-            "full_name": "Another User"
-        })
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "test@example.com",
+                "password": "anotherpass123",
+                "full_name": "Another User",
+            },
+        )
         assert response.status_code == status.HTTP_409_CONFLICT
 
 
@@ -35,10 +40,9 @@ class TestLogin:
 
     def test_login_success(self, client, test_user):
         """Test successful login with valid credentials."""
-        response = client.post("/api/v1/auth/login", json={
-            "email": "test@example.com",
-            "password": "testpass123"
-        })
+        response = client.post(
+            "/api/v1/auth/login", json={"email": "test@example.com", "password": "testpass123"}
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "access_token" in data
@@ -47,10 +51,9 @@ class TestLogin:
 
     def test_login_invalid_credentials(self, client, test_user):
         """Test login with invalid password fails."""
-        response = client.post("/api/v1/auth/login", json={
-            "email": "test@example.com",
-            "password": "wrongpassword"
-        })
+        response = client.post(
+            "/api/v1/auth/login", json={"email": "test@example.com", "password": "wrongpassword"}
+        )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.db.models.task import TaskPriority, TaskStatus, VALID_TRANSITIONS
+from app.db.models.task import VALID_TRANSITIONS, TaskPriority, TaskStatus
 from app.schemas.user import UserBrief
 
 

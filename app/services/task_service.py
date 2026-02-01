@@ -7,7 +7,7 @@ from app.core.exceptions import (
     InvalidTransitionError,
     NotFoundError,
 )
-from app.db.models.task import Task, TaskStatus, VALID_TRANSITIONS
+from app.db.models.task import VALID_TRANSITIONS, Task, TaskStatus
 from app.db.models.user import User
 from app.schemas.task import (
     TaskBulkStatusUpdate,
@@ -142,9 +142,7 @@ def assign_task(db: Session, task: Task, assignee_id: int | None, user: User) ->
     return task
 
 
-def transition_task_status(
-    db: Session, task: Task, target_status: TaskStatus, user: User
-) -> Task:
+def transition_task_status(db: Session, task: Task, target_status: TaskStatus, user: User) -> Task:
     """Transition a task to a new status.
 
     Args:

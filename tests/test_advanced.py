@@ -9,8 +9,8 @@ from app.core.security import hash_password
 from app.db.models.task import Task, TaskPriority, TaskStatus
 from app.db.models.user import User
 
-
 # --- Pagination Edge Cases ---
+
 
 class TestPaginationEdgeCases:
     """Tests for pagination edge cases."""
@@ -41,10 +41,7 @@ class TestPaginationEdgeCases:
         db.commit()
 
         # Request page 2 with 3 per page (should return 2 items)
-        response = client.get(
-            "/api/v1/tasks?page=2&per_page=3",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?page=2&per_page=3", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -68,10 +65,7 @@ class TestPaginationEdgeCases:
         db.commit()
 
         # Request page 10 when only 1 page exists
-        response = client.get(
-            "/api/v1/tasks?page=10&per_page=10",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?page=10&per_page=10", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -81,6 +75,7 @@ class TestPaginationEdgeCases:
 
 
 # --- Filter Combination Tests ---
+
 
 class TestFilterCombinations:
     """Tests for filtering tasks."""
@@ -103,10 +98,7 @@ class TestFilterCombinations:
         db.add_all([task_todo, task_in_progress])
         db.commit()
 
-        response = client.get(
-            "/api/v1/tasks?status=todo",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?status=todo", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -132,10 +124,7 @@ class TestFilterCombinations:
         db.add_all([task_low, task_high])
         db.commit()
 
-        response = client.get(
-            "/api/v1/tasks?priority=high",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?priority=high", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -167,10 +156,7 @@ class TestFilterCombinations:
         db.add_all([task1, task2, task3])
         db.commit()
 
-        response = client.get(
-            "/api/v1/tasks?status=todo&priority=high",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?status=todo&priority=high", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -181,6 +167,7 @@ class TestFilterCombinations:
 
 
 # --- Search Tests ---
+
 
 class TestSearch:
     """Tests for search functionality."""
@@ -204,10 +191,7 @@ class TestSearch:
         db.add_all([task1, task2])
         db.commit()
 
-        response = client.get(
-            "/api/v1/tasks?search=Important",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?search=Important", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -233,10 +217,7 @@ class TestSearch:
         db.add_all([task1, task2])
         db.commit()
 
-        response = client.get(
-            "/api/v1/tasks?search=special",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/tasks?search=special", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -246,16 +227,14 @@ class TestSearch:
 
 # --- Auth Security Tests ---
 
+
 class TestAuthSecurity:
     """Tests for authentication security."""
 
     def test_expired_token(self, client, db, test_user):
         """Expired token returns 401."""
         # Create a token that expired 1 hour ago
-        expired_token = create_access_token(
-            subject=test_user.id,
-            expires_delta=timedelta(hours=-1)
-        )
+        expired_token = create_access_token(subject=test_user.id, expires_delta=timedelta(hours=-1))
         headers = {"Authorization": f"Bearer {expired_token}"}
 
         response = client.get("/api/v1/tasks", headers=headers)
@@ -279,6 +258,7 @@ class TestAuthSecurity:
 
 # --- Authorization Tests ---
 
+
 class TestAuthorization:
     """Tests for task authorization."""
 
@@ -299,10 +279,9 @@ class TestAuthorization:
     @pytest.fixture
     def other_user_headers(self, client, other_user):
         """Get auth headers for the other user."""
-        response = client.post("/api/v1/auth/login", json={
-            "email": "other@example.com",
-            "password": "otherpass123"
-        })
+        response = client.post(
+            "/api/v1/auth/login", json={"email": "other@example.com", "password": "otherpass123"}
+        )
         token = response.json()["access_token"]
         return {"Authorization": f"Bearer {token}"}
 
@@ -328,7 +307,7 @@ class TestAuthorization:
         response = client.patch(
             f"/api/v1/tasks/{task_owned_by_test_user.id}",
             json={"title": "Hacked Title"},
-            headers=other_user_headers
+            headers=other_user_headers,
         )
 
         assert response.status_code == 403
@@ -338,8 +317,7 @@ class TestAuthorization:
     ):
         """Deleting another user's task returns 403."""
         response = client.delete(
-            f"/api/v1/tasks/{task_owned_by_test_user.id}",
-            headers=other_user_headers
+            f"/api/v1/tasks/{task_owned_by_test_user.id}", headers=other_user_headers
         )
 
         assert response.status_code == 403

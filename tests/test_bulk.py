@@ -1,9 +1,10 @@
 """Tests for bulk status update endpoint."""
 
 import pytest
-from app.db.models.task import Task, TaskStatus, TaskPriority
-from app.db.models.user import User
+
 from app.core.security import hash_password
+from app.db.models.task import Task, TaskPriority, TaskStatus
+from app.db.models.user import User
 
 
 @pytest.fixture
