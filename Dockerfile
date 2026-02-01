@@ -1,34 +1,17 @@
-FROM python:3.11-slim as base
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
+FROM python:3.11-slim as builder
 WORKDIR /app
-
-# Build stage
-FROM base as builder
-
-RUN pip install --upgrade pip
-
 COPY pyproject.toml .
-RUN pip install . --no-deps --target=/install
+RUN pip install --no-cache-dir build && python -m build --wheel
 
-# Runtime stage
-FROM base as runtime
-
-RUN useradd --create-home --shell /bin/bash appuser
-
-COPY --from=builder /install /usr/local/lib/python3.11/site-packages
-COPY . .
-
-RUN chown -R appuser:appuser /app
+FROM python:3.11-slim
+WORKDIR /app
+RUN useradd -m -u 1000 appuser
+COPY --from=builder /app/dist/*.whl .
+RUN pip install --no-cache-dir *.whl && rm *.whl
+COPY alembic.ini .
+COPY alembic/ alembic/
+COPY app/ app/
 USER appuser
-
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
-
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8000/ops/health || exit 1
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
